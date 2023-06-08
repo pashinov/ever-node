@@ -106,6 +106,12 @@ impl Default for CollatorConfig {
     }
 }
 
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug, Default)]
+#[serde(default)]
+pub struct BootConfig {
+    pub skip_downloading_key_blocks: bool,
+}
+
 #[derive(serde::Deserialize, serde::Serialize)]
 pub struct TonNodeConfig {
     log_config_name: Option<String>,
@@ -150,6 +156,8 @@ pub struct TonNodeConfig {
     cells_db_config: CellsDbConfig,
     #[serde(default)]
     collator_config: CollatorConfig,
+    #[serde(default)]
+    boot_config: BootConfig,
 }
 
 pub struct TonNodeGlobalConfig(TonNodeGlobalConfigJson);
@@ -552,6 +560,9 @@ impl TonNodeConfig {
     }
     pub fn cells_db_config(&self) -> &CellsDbConfig {
         &self.cells_db_config
+    }
+    pub fn boot_config(&self) -> &BootConfig {
+        &self.boot_config
     }
 
     pub fn collator_config(&self) -> &CollatorConfig {

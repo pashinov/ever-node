@@ -16,7 +16,7 @@ use crate::{
     block_proof::BlockProofStuff,
     config::{
         TonNodeConfig, KafkaConsumerConfig, CollatorTestBundlesGeneralConfig, 
-        ValidatorManagerConfig, CollatorConfig
+        ValidatorManagerConfig, CollatorConfig, BootConfig
     },
     engine_traits::{
         ExternalDb, EngineAlloc, EngineOperations,
@@ -131,6 +131,7 @@ pub struct Engine {
 
     test_bundles_config: CollatorTestBundlesGeneralConfig,
     collator_config: CollatorConfig,
+    boot_config: BootConfig,
  
     shard_states_keeper: Arc<ShardStatesKeeper>,
     #[cfg(feature="workchains")]
@@ -567,6 +568,7 @@ impl Engine {
         let global_config = general_config.load_global_config()?;
         let test_bundles_config = general_config.test_bundles_config().clone();
         let collator_config = general_config.collator_config().clone();
+        let boot_config = general_config.boot_config().clone();
         let low_memory_mode = general_config.low_memory_mode();
 
         let network = NodeNetwork::new(
@@ -733,6 +735,7 @@ impl Engine {
             remp_capability: AtomicBool::new(false),
             test_bundles_config,
             collator_config,
+            boot_config,
             shard_states_keeper: shard_states_keeper.clone(),
             #[cfg(feature="workchains")]
             workchain_id: AtomicI32::new(workchain_id),
@@ -1987,7 +1990,7 @@ async fn boot(engine: &Arc<Engine>, zerostate_path: Option<&str>)
             log::debug!("before cold boot: {}", err);
 
             engine.acquire_stop(Engine::MASK_SERVICE_BOOT);
-            let id = boot::cold_boot(engine.clone()).await;
+            let id = boot::cold_boot(engine.clone(), &engine.boot_config).await;
             engine.release_stop(Engine::MASK_SERVICE_BOOT);
             let id = id?;
             engine.save_last_applied_mc_block_id(&id)?;
